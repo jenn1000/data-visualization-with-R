@@ -2,7 +2,7 @@
 title: "Assignment5"
 author: "Jae Eun Hong"
 date: "10/5/2021"
-output: html_document
+output: github_document
 ---
 
 ## Libraries 

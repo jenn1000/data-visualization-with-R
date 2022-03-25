@@ -2,7 +2,7 @@
 title: "Final assignment"
 author: "Jae Eun Hong"
 date: "11/2/2021"
-output: html_document
+output: github_document
 ---
 
 ## 1. Preparations
