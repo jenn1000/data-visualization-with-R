@@ -2,7 +2,7 @@
 HT21 Data visualization with R 
 
 
-# Final project
+## Final project
 
 I chose 16 languages of Africa to investigate two research questions:
 
