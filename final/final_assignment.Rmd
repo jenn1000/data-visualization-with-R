@@ -8,7 +8,6 @@ output: github_document
 ## 1. Preparations
 
 #### Library setting
-
 ```{r message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
@@ -27,16 +26,12 @@ library(rgeos)
 library(ggsflabel)
 ```
 
-#### Setting a working directory
-
-```{r message=FALSE, warning=FALSE}
-setwd('C:/Users/wk789/Documents/school/UU/data visualisation/final/WCS-Data-20110316')
-```
-
 #### Loading data
 
 ```{r message=FALSE}
 # language 
+setwd('C:/Users/wk789/Documents/school/UU/data visualisation/final/WCS-Data-20110316/')
+
 lang <- read.table("lang.txt", sep = '\t', encoding = 'UTF-8')
 lang$V3 <- tolower(lang$V3)
 lang <- lang %>% 
@@ -86,6 +81,8 @@ lang
 ```
 
 ```{r message=FALSE, warning=FALSE}
+setwd('C:/Users/wk789/Documents/school/UU/data visualisation/final/WCS-Data-20110316/')
+
 region <- read.table("region.txt", sep = ',', encoding = 'UTF-8', header=TRUE)
 region
 
@@ -207,7 +204,7 @@ ggplot() +
 
 Some languages share various similar linguistic features on color terms when they belong to the same language trees, e.g. *blue* in English and *blå* in Swedish. I investigated how similar the color terms would be for 16 languages. First, I chose the general Red, Green, Blue colors on Figure 1 below (red - `G3`, green-`G16`, blue-`G30`) and chose the term with the maximum frequency.
 
-![Figure 1. Color chip table on WCS](color%20chart.png)
+![Figure 1. Color chip table on WCS](./WCS-Data-20110316/color chart.png)
 
 There was a limitation to find a distinct similarity/difference between the languages without the knowledge of each language's (and cross-) linguistic features. However, color terms for 'blue' showed many similarities among some languages, such as *biri* (Vagla) -*biribiri* (Mundu) , *blu* Chumburu)-*bulu* (Mampruli)- *buluma* (Gunu), and kpe'(Wobe)-kp(Bete). Especially, Wobe and Bete language are classified as the same language family of Niger--Congo -> Atlantic--Congo-> Kru. In addition, there was an interesting finding that many languages share same color terms for both blue and green colors.
 

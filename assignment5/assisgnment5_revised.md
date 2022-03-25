@@ -1,14 +1,11 @@
----
-title: "Assignment5"
-author: "Jae Eun Hong"
-date: "10/5/2021"
-output: github_document
----
+Assignment5
+================
+Jae Eun Hong
+10/5/2021
 
-## Libraries 
-```{r message=FALSE, warning=FALSE}
+## Libraries
 
-
+``` r
 library(tidyverse)
 library(readxl)
 library(dplyr)
@@ -19,9 +16,9 @@ library(babynames)
 library(barnnamn)
 ```
 
+## 1. Reversing classification
 
-## 1. Reversing classification 
-```{r message=FALSE, warning=FALSE}
+``` r
 # Simplified csv file of kelly data
 temp_data <- read.csv('C:/Users/wk789/Documents/school/UU/data visualisation/assignment5/japankoppenextra.csv')
 
@@ -55,9 +52,16 @@ for(c in temp_data %>% pull(city) %>% unique()){
 city_climate
 ```
 
-## 2. Further climate subdivisions 
-```{r message=FALSE, warning=FALSE}
+    ## # A tibble: 3 x 2
+    ##   city     climate
+    ##   <chr>    <chr>  
+    ## 1 Tokyo    C      
+    ## 2 Sapporo  D      
+    ## 3 Takasaki C
 
+## 2. Further climate subdivisions
+
+``` r
 climateclass <- function(temperatures, precipitations){
   
   # storing summer / winter precipitation into a variable
@@ -113,13 +117,18 @@ for(c in temp_data %>% pull(city) %>% unique()){
 }
 
 city_climate
-
 ```
 
+    ## # A tibble: 3 x 2
+    ##   city     climate
+    ##   <chr>    <chr>  
+    ## 1 Tokyo    Cf     
+    ## 2 Sapporo  Df     
+    ## 3 Takasaki Cw
 
 ## 3. RE with Barnnamn data
 
-```{r message=FALSE, warning=FALSE}
+``` r
 vowel_pattern = "^[AEIOUYÅÄÖ]"
 
 
@@ -132,7 +141,25 @@ vstart_data <- barnnamn %>%
   mutate(start="vowel")
 
 vstart_data
+```
 
+    ## # A tibble: 46 x 4
+    ## # Groups:   year [23]
+    ##     year sex   total start
+    ##    <int> <chr> <dbl> <chr>
+    ##  1  1998 F     0.289 vowel
+    ##  2  1998 M     0.259 vowel
+    ##  3  1999 F     0.296 vowel
+    ##  4  1999 M     0.270 vowel
+    ##  5  2000 F     0.293 vowel
+    ##  6  2000 M     0.269 vowel
+    ##  7  2001 F     0.290 vowel
+    ##  8  2001 M     0.276 vowel
+    ##  9  2002 F     0.309 vowel
+    ## 10  2002 M     0.296 vowel
+    ## # ... with 36 more rows
+
+``` r
 cstart_names <- barnnamn$name %>% str_subset(vowel_pattern, negate=TRUE)
 
 cstart_data <- barnnamn %>% 
@@ -150,17 +177,15 @@ ggplot(final_data, aes(x = year, y = total, colour = sex)) + facet_wrap(~start) 
           size = rel(1.2), lineheight = .9,
           family = "Calibri", face = "bold", colour="darkseagreen4"
         ))
-
 ```
 
+![](assisgnment5_revised_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
-Names starting with a consonant is more common than the ones with a vowel on both sex. The distribution of male names beginning with consonants are inversely proportional to names beginning with vowels.
+Names starting with a consonant is more common than the ones with a
+vowel on both sex. The distribution of male names beginning with
+consonants are inversely proportional to names beginning with vowels.
 
-
-
-```{r message=FALSE, warning=FALSE}
-
-
+``` r
 vstart_data_for_vowel_plot <- barnnamn %>% 
   filter(name %in% vstart_names) %>% 
   mutate(start = str_extract(name, '^.{1}')) %>% 
@@ -177,23 +202,35 @@ ggplot(vstart_data_for_vowel_plot
           size = rel(1.2), lineheight = .9,
           family = "Calibri", face = "bold", colour="darkseagreen4"
         ))
-
-
 ```
 
+![](assisgnment5_revised_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-The vowel 'A' and 'E' are favoured by both gender. However, for male, the vowel 'A' is most popular for male, and for female, the vowel 'E' is most popular. The special vowels that exist in Swedish (Å, Ö, Ä and Y) are rarely used in both gender. The fact that 'Ä' is only used in female name and 'Ö' in male name through out the time is an interesting point. It is also intriguing that the vowel 'Å' is seldom used for female name till early 2000s and lost the popularity among female name. 
+The vowel ‘A’ and ‘E’ are favoured by both gender. However, for male,
+the vowel ‘A’ is most popular for male, and for female, the vowel ‘E’ is
+most popular. The special vowels that exist in Swedish (Å, Ö, Ä and Y)
+are rarely used in both gender. The fact that ‘Ä’ is only used in female
+name and ‘Ö’ in male name through out the time is an interesting point.
+It is also intriguing that the vowel ‘Å’ is seldom used for female name
+till early 2000s and lost the popularity among female name.
 
+## 4. RE with babynames data
 
-
-## 4. RE with babynames data 
-
-```{r message=FALSE, warning=FALSE}
-
+``` r
 girls <- babynames %>% filter(sex=='F') %>% group_by(name) %>% summarise(total=sum(n)) %>% arrange(desc(total)) %>% head(5)
 girls
 ```
-```{r message=FALSE, warning=FALSE}
+
+    ## # A tibble: 5 x 2
+    ##   name        total
+    ##   <chr>       <int>
+    ## 1 Mary      4123200
+    ## 2 Elizabeth 1629679
+    ## 3 Patricia  1571692
+    ## 4 Jennifer  1466281
+    ## 5 Linda     1452249
+
+``` r
 # mary variant pattern
 # Maaria, Maaarja, Mari, Maria, Mariam, Marie
 mary = 'Ma{1,2}r[ij][ae]?.*' 
@@ -260,5 +297,14 @@ final_data <- final_data %>% group_by(original) %>% summarise(total=sum(total)) 
 final_data
 ```
 
-Most of the order has been changed after the recalculation of the totals across all variants except for the name Mary. 
+    ## # A tibble: 5 x 2
+    ##   original    total
+    ##   <chr>       <int>
+    ## 1 Mary      2787431
+    ## 2 Linda     2265778
+    ## 3 Jennifer  1970724
+    ## 4 Patricia  1916279
+    ## 5 Elizabeth 1862533
 
+Most of the order has been changed after the recalculation of the totals
+across all variants except for the name Mary.

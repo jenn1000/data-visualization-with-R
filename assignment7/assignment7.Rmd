@@ -30,11 +30,12 @@ final <- data.frame()
 for (i in 1:length(file_list)) {
   dataset <- read.table(file_list[i],
                         sep = ',',
-                        header = T,
+                        header = F,
                         col.names = c('name', 'translation'),
                         encoding='UTF-8',
                         stringsAsFactors = F)
-  dataset$language <- file_list[i] %>% str_extract(.,pattern = '[a-z]+')
+  dataset$language <- file_list[i] %>% str_extract(., 
+                                                   pattern = '[a-z]+')
   dataset$id <- i
   dataset$order <- as.numeric(rownames(dataset))
   final <- rbind(final, dataset)
