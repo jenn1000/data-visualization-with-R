@@ -2,7 +2,11 @@
 title: "Assignment3"
 author: "Jae Eun Hong"
 date: "9/21/2021"
+<<<<<<< HEAD
 output: github_document
+=======
+output: rmarkdown::github_document
+>>>>>>> af65932ba360c16b6a3b9254490c3398537da51e
 ---
 
 ```{r setup, include=FALSE}
