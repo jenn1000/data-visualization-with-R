@@ -1,0 +1,102 @@
+---
+title: "assignment6"
+author: "Jae Eun Hong"
+date: "10/14/2021"
+output: html_document
+---
+## Libraries 
+```{r message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+library(tidyverse)
+library(readxl)
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(magrittr)
+library(RColorBrewer)
+```
+
+## Reading multiple data file 
+
+```{r message=FALSE, warning=FALSE}
+setwd('C:/Users/wk789/Documents/school/UU/data visualisation/assignment6/animals_clean')
+
+file_list <- list.files(pattern="swedish*")
+print(file_list)
+final <- data.frame()
+for (i in 1:length(file_list)) {
+  dataset <- read.table(file_list[i],
+                        sep = ',',
+                        header = T,
+                        col.names = c('name', 'translation'),
+                        encoding='UTF-8')
+
+  dataset$language <- file_list[i] %>% str_extract(.,pattern = '[a-z]+')
+  dataset$id <- i
+  dataset$order <- as.numeric(rownames(dataset))
+  final <- rbind(final, dataset)
+}
+
+final
+```
+
+
+
+I ran into an encoding problem. Swedish characters were not properly showing due to the wrong encoding. I fixed it with inserting the value of 'encoding' parameter on read.table function into 'UTF-8'. 
+
+
+
+## Plotting various graphs 
+
+
+```{r message=FALSE, warning=FALSE}
+final$name <- tolower(final$name)
+final$translation <- tolower(final$translation)
+
+
+top6 <- final %>%
+  group_by(name) %>% summarize(total = n()) %>% arrange(desc(total))
+
+
+ggplot(head(top6), aes(x=name, y=total)
+)+ geom_bar(aes(fill=name), stat="identity") + scale_fill_brewer(palette = "Set3") +
+  ggtitle("Top 6 mentioned animals in Swedish")+
+  theme(legend.position = "right",
+        plot.title = element_text(
+          size = rel(1.2), lineheight = .9,
+          family = "Calibri", face = "bold", colour="Orange"
+        ))
+```
+
+
+```{r}
+
+
+cat_dog<-
+  final %>% 
+  group_by(name) %>% 
+  summarize(total=n()) %>% 
+  filter(name=='katt'|name=='hund')
+
+ggplot(cat_dog, aes(x=name, y=total)
+)+ geom_bar(aes(fill=name), stat="identity") + scale_fill_brewer(palette = "Set3") +
+  ggtitle("Katter vs. Hundar")+
+  theme(legend.position = "right",
+        plot.title = element_text(
+          size = rel(1.2), lineheight = .9,
+          family = "Calibri", face = "bold", colour="aquamarine3"
+        ))
+```
+```{r}
+order_ <- final %>% filter(name=='katt' | name=='hund') %>% group_by(name, order) %>% summarize(n=n()) 
+
+ggplot(order_, aes(x=order, y=n, color=name))+ geom_point()+
+  ggtitle("Mentioned order of cats and dogs")+
+  theme(legend.position = "right",
+        plot.title = element_text(
+          size = rel(1.2), lineheight = .9,
+          family = "Calibri", face = "bold", colour="aquamarine3"
+        ))
+```
+
+ 

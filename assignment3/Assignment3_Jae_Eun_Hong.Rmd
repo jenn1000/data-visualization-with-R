@@ -1,0 +1,134 @@
+---
+title: "Assignment3"
+author: "Jae Eun Hong"
+date: "9/21/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Getting started 
+
+```{r message=FALSE, warning=FALSE}
+#install.packages('remotes')
+#remotes::install_github("evoling/barnnamn")
+
+library(tidyverse)
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(RColorBrewer)
+library(babynames)
+library(barnnamn)
+```
+
+
+## Exercises 
+
+__1. Examine the Kelly data and report what are the ten most common en-words in Swedish? What are the ten most common ett-words? Write the R code to produce this result directly. You could use select() to limit the report to just the columns that are relevant.__ 
+
+1) en words 
+```{r message=FALSE, warning=FALSE}
+# Simplified csv file of kelly data
+kelly <- read.csv('C:/Users/wk789/Documents/school/UU/data visualisation/simplified_kelly.csv')
+
+# Extracting frequency, word, POS of en-noun column with descending order, storing in a variable 'en_word'
+en_word <- kelly %>% filter(pos == 'noun-en') %>% arrange(desc(freq)) %>% select(freq, word)
+
+# Showing top 10 most common en words
+head(en_word, 10)
+```
+2) ett words 
+````{r message=FALSE, warning=FALSE}
+# ett word
+ett_word <- kelly %>% filter(pos == 'noun-ett') %>% arrange(desc(freq)) %>% select(freq, word)
+
+# Showing top 10 most common ett words
+head(ett_word, 10)
+
+```
+
+__2. Make a graph of the popularity of variants the girl’s name “Anna” in the US (assume all possible spellings are “Anna”, “Anne”, and “Ann”; although you are welcome to add others if you can think of any). Write a paragraph describing what the graph shows.__ 
+
+```{r message=FALSE, warning=FALSE}
+Anna_varient <- babynames %>% 
+  filter(name=='Anna' | name=='Anne' | name=='Ann') %>% filter(sex=='F')
+
+gg1 <- ggplot(data=Anna_varient, aes(year, n, color=name)) + 
+  geom_line(size=1) + 
+  scale_y_continuous(breaks = seq(0, 15000, 1000), name = "Number of babies") +
+  scale_color_brewer(palette = "Paired")+
+  theme(legend.position = "left",
+        plot.title = element_text(
+          size = rel(1.2), lineheight = .9,
+          family = "Calibri", face = "bold", colour="Navy"
+        )) +
+  ggtitle("Popularity of variants of Anna(F) in the US")
+gg1
+
+```
+
+
+The standard form _Anna_ was popular than other variants throughout history in general except for the mid-1900s. _Anna_ reached a peak in 1920s, plunged until mid-1900s and started to regain the popularity shortly in late 1900s. _Ann_, the variant of _Anna_ showed a steady growth from early 1900s to mid 1900s and reached a peak around 1960s and the popularity declined steadily since then. _Anne_, another variant of _Anna_, showed least popularity, with rather flat graph, among three variants in general. 
+
+
+__3.Think of a name which you think might have had a burst of popularity (or a sudden unpopularity) in either the US or Sweden on or after a particular year. Describe your hypothesis and then present a graph showing whether it seems to be true. Remember that the babynames data has US names from 1880 onwards, but barnnamn only has Swedish names from 1998.__ 
+
+```{r message=FALSE, warning=FALSE}
+
+Mohammad <- barnnamn %>% 
+  filter(name=='Mohammad'|name=='Muhammad') %>% filter(sex=='M')
+
+gg1 <- ggplot(data=Mohammad, aes(year, n, color=name)) + 
+  geom_line(size=1) + 
+  scale_y_continuous(breaks = seq(0, 200, 10), name = "Number of babies") +
+  scale_color_brewer(palette = "Paired")+
+  theme(legend.position = "left",
+        plot.title = element_text(
+          size = rel(1.2), lineheight = .9,
+          family = "Calibri", face = "bold", colour="Steel Blue"
+        )) +
+  ggtitle("Popularity of variants of Mohammad(M) in Sweden")
+gg1
+```
+
+
+Mohammad,the transliteration of the Arabic given name, showed the sharp rise in Sweden around 2014. It could be highly related to the large-scale asylum seeker immigration in Sweden starting from 2014. In 2014, 81,300 individuals applied for asylum in Sweden and more than 160,000 asylum seekers arrived in Sweden in 2015. High percentage of asylum seekers came from Syria, Eritrea, Iraq, where a large population is Muslim. The graph representing Mohammad's popularity matches the swedish immigration trends. Also, the graph above shows the steady decline since 2016, which can be explained with the fact that Sweden sharpened their asylum laws in 2016, which caused the immigration declined down to around 82.5 thousand individuals arriving in 2020.    
+
+__4.Find the five most popular names in Sweden for boys or girls, and graph their popularity since 1998 in both Sweden and US (you will probably need to (i) save filtered tables from each database, (ii) give each table a column with distinct labels__
+
+```{r message=FALSE, warning=FALSE}
+# Finding the five most popular girls name in Sweden
+girlname_top_5 <- head(barnnamn %>% filter(sex=='F') %>% group_by(name) %>% summarize(sum_n = sum(n)) %>% arrange(desc(sum_n)), 5)
+girlname_top_5['name']
+```
+
+```{r}
+# Graph that shows their popularity since 1998 in both Sweden/U.S.
+sweden <- barnnamn %>% filter(sex=='F' )  
+sweden <- sweden[(sweden$name %in% girlname_top_5$name),] %>% mutate(country='Sweden')
+
+usa <- babynames %>% filter(sex=='F' & year >= 1998)
+usa <- usa[(usa$name %in% girlname_top_5$name),] %>% mutate(country='USA')
+
+final_data <- rbind(sweden, usa)
+
+
+# drawing a plot 
+# To reduce the data unbalance, I used logorithm to the number of babies. 
+gg1 <- ggplot(data=final_data, aes(year, log(n), color=country, shape=name, linetype=name)) + 
+  geom_line(size=1) + 
+  scale_y_continuous(breaks = seq(0, 25000, 1500), name = "Popularity") +
+  scale_color_brewer(palette = "Set2")+
+  theme(legend.position = "left",
+        plot.title = element_text(
+          size = rel(1.2), lineheight = .9,
+          family = "Calibri", face = "bold", colour="Navy"
+        )) +
+  ggtitle("Popularity of the 5 most popular names in Sweden in both Sweden and USA")
+gg1
+
+```

@@ -1,0 +1,162 @@
+---
+title: "assignment7"
+author: "Jae Eun Hong"
+date: "10/19/2021"
+output: html_document
+---
+## Libraries 
+```{r message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(magrittr)
+library(RColorBrewer)
+
+```
+
+
+
+
+## Read and combine the animal data  
+
+```{r message=FALSE, warning=FALSE}
+setwd('C:/Users/wk789/Documents/school/UU/data visualisation/assignment6/animals_clean')
+
+file_list <- list.files()
+final <- data.frame()
+for (i in 1:length(file_list)) {
+  dataset <- read.table(file_list[i],
+                        sep = ',',
+                        header = T,
+                        col.names = c('name', 'translation'),
+                        encoding='UTF-8',
+                        stringsAsFactors = F)
+  dataset$language <- file_list[i] %>% str_extract(.,pattern = '[a-z]+')
+  dataset$id <- i
+  dataset$order <- as.numeric(rownames(dataset))
+  final <- rbind(final, dataset)
+}
+
+final$name = NULL 
+final
+```
+
+
+```{r}
+
+# Removing duplicates 
+final <- final %>% distinct(., translation, id, .keep_all = TRUE)
+
+# lowercase the animal names 
+final$translation <- tolower(final$translation)
+
+swedish <- final %>% filter(language=='swedish') %>% select(-c(language)) 
+
+chinese <- final %>% filter(language=='chinese') %>% 
+  select(-c(language))
+
+top15_chinese <- chinese %>% group_by(translation) %>% dplyr::summarize(total=n()) %>% arrange(desc(total)) %>% head(15) %>% select(translation)
+
+top15_swedish <- swedish %>% group_by(translation) %>% dplyr::summarize(total=n()) %>% arrange(desc(total)) %>% head(15) %>% select(translation)
+
+top15_chinese
+top15_swedish
+```
+
+
+```{r}
+distance <- function(lang_data, top15_name_list) {
+  
+  name_list <- list()
+  
+  for (i in 1:nrow(top15_name_list)){
+    name_list[i] <- top15_name_list[i,]
+  }
+  
+  
+  com_name <- combn(name_list, m=2)
+  
+  both_animal <- data.frame()
+  
+  for(i in 1:ncol(com_name)) {
+    
+    temp = c(com_name[1,i], com_name[2,i])
+    a <- lang_data %>% group_by(id) %>% filter(translation%in%temp)
+    
+    id_idx <- a %>% group_by(id) %>% summarise(n=n()) %>% filter(n == 2) %>% select(id) %>% pull(.)
+    
+    #print(length(id_idx))
+    
+    
+    animal <- a %>%  group_by(id) %>% filter(id%in%id_idx)
+    #print(animal)
+    
+    both_animal <- rbind(both_animal, animal)}
+    both_animal <- both_animal %>% arrange(id)
+ 
+  both_animal_wide <- both_animal %>% distinct()%>% group_by(id, order)  %>% mutate(row=row_number()) %>%  pivot_wider(names_from = id, values_from = order,  values_fill = 0) %>% select(-row)
+  # 
+  d <- dist(both_animal_wide %>%
+             column_to_rownames("translation"), method='euclidean')
+  # 
+  return(d)
+} 
+
+       
+chinese_distance <- distance(chinese, top15_chinese)
+swedish_distance <- distance(swedish, top15_swedish)
+```
+
+
+## MDS plot for both languages 
+
+```{r}
+#chinese
+animals_dm_ch <- as.dist(chinese_distance)
+animals_mds_ch <- cmdscale(animals_dm_ch, k=2)
+plot(animals_mds_ch[,1], animals_mds_ch[,2], type = "n")
+text(animals_mds_ch[,1], animals_mds_ch[,2], label = rownames(animals_mds_ch))
+
+
+
+```
+
+
+
+
+```{r}
+#swedish
+animals_dm_sv <- as.dist(swedish_distance)
+animals_dm_sv <- as.dist(swedish_distance)
+animals_mds_sv <- cmdscale(animals_dm_sv, k=2)
+plot(animals_mds_sv[,1], animals_mds_sv[,2], type = "n")
+text(animals_mds_sv[,1], animals_mds_sv[,2], label = rownames(animals_mds_sv))
+
+```
+
+
+
+The result on the MDS plots above for Swedish and Chinese suggest that animal free-listing is somewhat influenced by the characteristics of both countries, except for some exceptions, such as rhinoceros, elephants clustered similar range with domestic cats on the Swedish animal listing plot. But, generally, MDS plots revealed clusters of domestic animals, e.g. (cat and dog) and (cows and horse). 
+
+
+
+## Cluster analysis plot 
+
+```{r}
+# chinese 
+ch_cluster <- hclust(animals_dm_ch, method='complete')
+plot(ch_cluster)
+```
+
+
+```{r}
+sv_cluster <- hclust(animals_dm_sv, method='complete')
+plot(sv_cluster)
+```
+
+
+The Clustering plots clearly shows how far the domestic/exotic animals are in both countries. In this experiment, I chose furthest neighbour method to compare the clusters. It clearly showed the far distance between domestic animals (horse, cows) and exotic animals (tiger, lion) for Swedish and (cat, dog) and (ox, giraff) for Chinese.  
+

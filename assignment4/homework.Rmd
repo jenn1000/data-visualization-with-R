@@ -1,0 +1,156 @@
+---
+title: "Assignment4"
+author: "Jae Eun Hong"
+date: "9/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Preparing libraries
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(reshape2)
+library(stringr)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(RColorBrewer)
+library(babynames)
+```
+
+
+
+## 1. Japaneseclimate_messy data
+
+```{r message=FALSE, warning=FALSE}
+japan_messy <- read.csv('C:/Users/wk789/Documents/school/UU/data visualisation/assignment4/japaneseclimate_messy.csv')
+
+#city, rainfall column
+japan_clean <- japan_messy %>% melt(measure.vars=grep('rain_mm', colnames(.)), variable.name='city', value.name="rainfall")
+
+japan_clean$city <- japan_clean$city %>%
+  gsub(x=., "_rain_mm", "")
+
+#snowfall column
+japan_clean <- japan_clean %>% melt( measure.vars=grep('snow_cm', colnames(.)), value.name='snowfall')  
+
+japan_clean$variable <- japan_clean$variable %>% gsub(x=., "_snow_cm", "") 
+
+#1. only saving the right column by matching city names
+#2. getting rid of the variable column for the next column preparation 
+japan_clean <- japan_clean %>% .[(.$variable == .$city), ] %>% subset(., select=-variable)
+
+
+# temperature column 
+japan_clean <- japan_clean %>% melt(measure.vars=grep('temp_deg', colnames(.)), value.name='temperature') 
+
+japan_clean$variable <- japan_clean$variable %>% gsub(x=., "_temp_deg", "") 
+
+japan_clean <- japan_clean %>% .[(.$variable == .$city), ] 
+
+# month column 
+japan_clean <- japan_clean %>% melt(measure.vars=grep('X.1', colnames(.)), value.name='month', variable.name='x') 
+ 
+
+
+japan_clean <- japan_clean %>% subset(., select=-c(x, X, variable))
+
+# changing column order 
+japan_clean <- japan_clean[,c(1,5,4,2,3)]
+japan_clean
+
+write.csv(japan_clean, "./japan_clean.csv", row.names = FALSE)
+```
+
+## 2. swedishclimate/Japanese data
+```{r message=FALSE, warning=FALSE}
+sweden <- read.csv('C:/Users/wk789/Documents/school/UU/data visualisation/assignment4/swedishclimate.csv')
+
+sweden$month <- match(sweden$month, month.name)
+  
+japan_clean <- japan_clean %>% mutate(., country='Japan')
+japan_clean <- japan_clean %>% select(.,c(6,1,2,3,4))
+japan_clean
+climate <- rbind(japan_clean, sweden)
+climate
+
+```
+```{r message=FALSE, warning=FALSE}
+# drawing rainfall per city graph 
+
+ggplot(data=climate, aes(x=month,y=rainfall, color=city)) + geom_line() + facet_wrap(~country)+scale_color_brewer(palette = "Paired") + scale_x_continuous(breaks=c(1:12))+
+  ggtitle("Rainfalls(mm) per city in Sweden/Japan")+
+  theme(plot.title = element_text(color='Brown'))
+```
+
+
+First of all, the average amount of rainfall in Japan is higher than Sweden throughout the year. Especially during the summer times (June-August), 4 Japanese cities show over 100mm rainfalls. Sweden, however, shows around 60mm for all three cities, almost half of the rainfalls compared to Japan. In the winter times, Sweden, in general , tend to rain slightly more than Japan except for the Japanese city called _Sapporo_. This graph shows that Japanese summer is significantly more humid than the swedish summer and vice versa in winter.   
+
+
+```{r message=FALSE, warning=FALSE}
+# Japanese city Sendai has the highest average annual temperature by ca 12.825. 
+
+climate_mean <- climate %>% group_by(., city) %>% summarise(m=round(mean(temperature),3)) 
+climate_mean <- climate_mean %>% arrange(., .$city, desc(.$m))
+climate_mean %>% arrange(desc(m))
+```
+
+## 3. Androgynous names
+```{r message=FALSE, warning=FALSE}
+
+
+bbyname <- babynames %>% group_by(., name, sex) %>% summarise( total_n=sum(n))
+androgynous <- bbyname %>% spread(., key=sex, value=total_n) %>% drop_na(F, M)
+
+# Finding names that are used for both
+androgynous['name']
+
+```
+
+
+```{r message=FALSE, warning=FALSE}
+
+#total num of occurences of each name/ select those that occur more than 100000 times
+androgynous$total_num <- androgynous$F + androgynous$M
+androgynous_filtered <- androgynous %>% filter(total_num > 100000) %>% arrange(desc(total_num))
+
+androgynous_filtered
+
+```
+
+```{r message=FALSE, warning=FALSE}
+#finding faily even distribution betweene boys/girls
+
+androgynous_filtered$f_prop <- androgynous_filtered$F / androgynous_filtered$total_num
+androgynous_filtered$m_prop <- androgynous_filtered$M / androgynous_filtered$total_num
+androgynous_filtered
+```
+
+```{r message=FALSE, warning=FALSE}
+
+androgynous_filtered %>% filter(f_prop > 0.4 & f_prop < 0.6) 
+```
+
+
+If the hypothesis is that the data proportion in the range of 0.4 to 0.6 is fairly even data, it can be said that these five names are the most evenly distributed names. 
+
+
+# three names frequency per gender over time 
+```{r}
+three_names <- babynames %>% filter(., name=='Peyton'| name=='Casey'| name=='Riley' )
+
+
+ggplot(three_names, aes(x=year, y=n, color=name))+geom_line()+facet_wrap(~sex) +scale_color_brewer(palette = "Paired") +
+  ggtitle("Name frequency per gender over time")+
+  theme(plot.title = element_text(color='Brown'))
+```
+
+
+I picked Riley, Casey, and Jaime among the most even names. Riley, the green line above shows that people's preference for the name is on the rise during the early 2000's on both genders. The preference of the name 'Jaime' for Male name steadily decreased after the peak around 2007. The frequency of the name 'Peyton' rises in a vast scale after the 2000's on both genders. Peyton and Riley are slightly more preferred by the girls. Casey, however, is more preferred by male gender and more steadily used by boys than girls. The graph above shows that the name 'Casey' was first used by the boy's name starting from 1880's, whereas the name started to be used as a girl's name around 1920's. Interesting phenomenon is that all three names were first used as a boy's name, but two out of three names surpassed the male name frequency around late 90's to the beginning of the 20's.   
+
+
